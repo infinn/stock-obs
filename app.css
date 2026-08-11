@@ -1,14 +1,49 @@
+@font-face {
+    font-family: 'Geist';
+    src: url('/font/GeistPixel-Grid.ttf') format('truetype');
+}
+
+:root {
+    --green: oklch(79.2% 0.209 151.711);
+    --red: oklch(63.7% 0.237 25.331);
+    --black: oklch(13% 0.028 261.692);
+    --white: oklch(98.4% 0.003 247.858);
+    --orange: oklch(79.5% 0.184 86.047);
+}
+
 body, html {
     margin: 0;
     padding: 0;
     width: 100%;
     height: 100%;
     overflow: hidden;
-    background-color: #000;
+    background-color: var(--black);
     font-family: 'Geist', sans-serif;
+    color: var(--white);
+    font-size: 2.5rem;
 }
 
-@font-face {
-    font-family: 'Geist';
-    src: url('/font/GeistPixel[ELSH].ttf') format('truetype');
+main{
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+}
+
+.marquee-viewport{
+    padding-left: 1rem;
+}
+
+.marquee-track {
+    display: inline-flex;
+    white-space: nowrap;
+    will-change: transform;
+    animation: marquee var(--marquee-duration, 10s) linear infinite;
+    gap: 1rem;
+}
+
+@keyframes marquee {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
 }
