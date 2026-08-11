@@ -1,0 +1,22 @@
+{
+  "api_key": "",
+  "provider": "finnhub",
+  "sync_timer_seconds": 60,
+  "type_style": "horizontal",
+  "tickers": [
+    "AAPL",
+    "NVDA",
+    "MSFT",
+    "GOOGL",
+    "AMZN",
+    "META"
+  ],
+  "style": {
+    "background": "#030712",
+    "color_up": "#06df72",
+    "color_down": "#fb2c36",
+    "color_text": "#f8fafc",
+    "color_alert": "#f0b100",
+    "velocity": 60
+  }
+}
