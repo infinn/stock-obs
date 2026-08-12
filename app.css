@@ -43,6 +43,21 @@ main{
     gap: 1rem;
 }
 
+.ticket .down .price{
+    color: var(--red);
+}
+.ticket .down .chg{
+    color: var(--red);
+}
+
+.ticket .up .price{
+    color: var(--green);
+}
+
+.ticket .up .chg{
+    color: var(--green);
+}
+
 @keyframes marquee {
     from { transform: translateX(0); }
     to   { transform: translateX(-50%); }
