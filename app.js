@@ -21,7 +21,6 @@
 
     // app state
     let currentConfig = null;
-    let tickerSearchResults = null;
 
     // main entrypoint
     function startOverlay() {
@@ -33,11 +32,9 @@
         loadOverlayConfig().then(function (config) {
             currentConfig = config;
 
-            var searchData = null;
             if (currentConfig && Array.isArray(currentConfig.tickers) && currentConfig.tickers.length > 0) {
-                searchTicker(currentConfig.tickers[0]).then(function (data) {
-                    searchData = data;
-                });
+                syncTickers();
+                setInterval(syncTickers, currentConfig.sync_timer_seconds * 1000);
             }
         });
     }
@@ -124,12 +121,12 @@
     function ticketHTML(tickerData) {
         if (tickerData.error) {
             return '<div class="ticket"><span class="sym">' + tickerData.symbol + '</span>' +
-                '<span class="no-data">SIN DATOS</span>'
+                '<span class="no-data">SIN DATOS</span></div>';
         }
-        return '<div class="ticket ' + trendClass(tickerData.change) + '">' +
-            '<span class="sym">' + tickerData.symbol + '</span>' +
+        return '<div class="ticket ' + trendClass(tickerData.change) + '" id="ticket">' +
+            '<span class="sym"> ' + tickerData.symbol + '</span>' +
             '<span class="price">' + fmtPrice(tickerData.price) + '</span>' +
-            '<span class="chg"><span class="arrow">' + arrow(tickerData.change) + '</span> ' + fmtChange(tickerData.change) + '</span>' +
+            '<span class="chg"><span class="arrow">' + arrow(tickerData.change) +
             '<span class="pct">' + fmtPct(tickerData.changePct) + '</span>' +
             '</div>';
     }
@@ -161,30 +158,82 @@
         return c > 0 ? 'up' : (c < 0 ? 'down' : 'flat');
     }
 
-    // Finnhub connection + ticker search
-    function searchTicker(query) {
-        var apiKey = (currentConfig && currentConfig.api_key) || DEFAULTS.api_key;
+    // Ticker data providers
+    function fetchQuote(ticker) {
+        var cfg = currentConfig || DEFAULTS;
+        var apiKey = (cfg.api_key || DEFAULTS.api_key).trim();
+        var provider = String(cfg.provider || 'finnhub').toLowerCase();
 
-        return fetch('https://finnhub.io/api/v1/search?q=' + encodeURIComponent(query) + '&token=' + encodeURIComponent(apiKey))
+        if (provider === 'twelve_data') {
+            return fetch('https://api.twelvedata.com/quote?symbol=' + encodeURIComponent(ticker) +
+                '&apikey=' + encodeURIComponent(apiKey), { cache: 'no-store' })
+                .then(function (res) { return res.json(); })
+                .then(function (d) {
+                    if (d && d.status === 'error') throw new Error((d.message || 'TwelveData') + ' (' + ticker + ')');
+                    var close = Number(d && d.close);
+                    var prev = Number(d && d.previous_close);
+                    if (!isFinite(close) || !isFinite(prev)) throw new Error('TwelveData: sin datos para ' + ticker);
+                    return {
+                        symbol: ticker,
+                        price: close,
+                        change: close - prev,
+                        changePct: (close - prev) / prev * 100
+                    };
+                });
+        }
+
+        return fetch('https://finnhub.io/api/v1/quote?symbol=' + encodeURIComponent(ticker) +
+            '&token=' + encodeURIComponent(apiKey), { cache: 'no-store' })
             .then(function (res) {
-                if (!res.ok) throw new Error('Finnhub search failed with status ' + res.status);
+                if (!res.ok) throw new Error('Finnhub HTTP ' + res.status);
                 return res.json();
             })
-            .then(function (data) {
-                tickerSearchResults = data && data.count ? data : null;
-                return tickerSearchResults;
-            })
-            .catch(function (err) {
-                console.error('searchTicker:', err);
-                tickerSearchResults = null;
-                return null;
+            .then(function (d) {
+                if (d.c === undefined || d.c === null) throw new Error('Finnhub: sin datos para ' + ticker);
+                return {
+                    symbol: ticker,
+                    price: d.c,
+                    change: d.d,
+                    changePct: d.dp
+                };
             });
+    }
+
+    // Ticker sync loop (fetches a quote for every ticker)
+    function syncTickers() {
+        var tickets = document.querySelectorAll('.marquee-track .ticket');
+        if (!tickets.length || !currentConfig) {
+            return;
+        }
+
+        var items = [];
+        var chain = Promise.resolve();
+
+        currentConfig.tickers.forEach(function (ticker) {
+            chain = chain.then(function () {
+                return fetchQuote(ticker);
+            }).then(function (quote) {
+                items.push(quote);
+            }).catch(function (err) {
+                console.error('fetchQuote:', err);
+                items.push({ symbol: ticker, error: true });
+            });
+        });
+
+        chain.then(function () {
+            var html = items.map(ticketHTML).join('');
+
+            tickets.forEach(function (ticket) {
+                ticket.innerHTML = html;
+            });
+        });
     }
 
     window.OVApp = {
         getConfig: getOverlayConfig,
         loadConfig: loadOverlayConfig,
-        searchTicker: searchTicker,
+        fetchQuote: fetchQuote,
+        syncTickers: syncTickers,
         start: startOverlay
     };
 
