@@ -41,6 +41,7 @@ main{
 }
 
 .marquee-viewport{
+    width: 100%;
     overflow: hidden;
     padding-left: 1rem;
 }
