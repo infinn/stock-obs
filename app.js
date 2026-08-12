@@ -21,6 +21,7 @@
 
     // app state
     let currentConfig = null;
+    let tickerSearchResults = null;
 
     // main entrypoint
     function startOverlay() {
@@ -31,7 +32,8 @@
 
         loadOverlayConfig().then(function (config) {
             currentConfig = config;
-            // TODO: use config to build the marquee content
+
+            
         });
     }
 
@@ -113,6 +115,20 @@
         return result;
     }
 
+    // Ticket function
+    function ticketHTML(tickerData) {
+        if (tickerData.error) {
+            return '<div class="ticket"><span class="sym">' + tickerData.symbol + '</span>' +
+                '<span class="no-data">SIN DATOS</span>'
+        }
+        return '<div class="ticket ' + trendClass(tickerData.change) + '">' +
+            '<span class="sym">' + tickerData.symbol + '</span>' +
+            '<span class="price">' + fmtPrice(tickerData.price) + '</span>' +
+            '<span class="chg"><span class="arrow">' + arrow(tickerData.change) + '</span> ' + fmtChange(tickerData.change) + '</span>' +
+            '<span class="pct">' + fmtPct(tickerData.changePct) + '</span>' +
+            '</div>';
+    }
+
     // utils
     function arrow(c) {
         return c > 0 ? '▲' : (c < 0 ? '▼' : '▬');
@@ -122,9 +138,48 @@
         return currentConfig;
     }
 
+    function fmtPrice(p) {
+        return isFinite(p) ? Number(p).toFixed(2) : '--';
+    }
+
+    function fmtChange(c) {
+        if (!isFinite(c)) return '--';
+        return (c >= 0 ? '+' : '') + Number(c).toFixed(2);
+    }
+
+    function fmtPct(p) {
+        if (!isFinite(p)) return '--';
+        return (p >= 0 ? '+' : '') + Number(p).toFixed(2) + '%';
+    }
+
+    function trendClass(c) {
+        return c > 0 ? 'up' : (c < 0 ? 'down' : 'flat');
+    }
+
+    // Finnhub connection + ticker search
+    function searchTicker(query) {
+        var apiKey = (currentConfig && currentConfig.api_key) || DEFAULTS.api_key;
+
+        return fetch('https://finnhub.io/api/v1/search?q=' + encodeURIComponent(query) + '&token=' + encodeURIComponent(apiKey))
+            .then(function (res) {
+                if (!res.ok) throw new Error('Finnhub search failed with status ' + res.status);
+                return res.json();
+            })
+            .then(function (data) {
+                tickerSearchResults = data && data.count ? data : null;
+                return tickerSearchResults;
+            })
+            .catch(function (err) {
+                console.error('searchTicker:', err);
+                tickerSearchResults = null;
+                return null;
+            });
+    }
+
     window.OVApp = {
         getConfig: getOverlayConfig,
         loadConfig: loadOverlayConfig,
+        searchTicker: searchTicker,
         start: startOverlay
     };
 
