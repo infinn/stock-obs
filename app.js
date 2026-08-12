@@ -8,13 +8,15 @@
         provider: 'finnhub',
         sync_timer_seconds: 60,
         type_style: 'horizontal',
+        background_style: 'solid',
+        typografy_size: 20,
         tickers: DEFAULT_TICKERS,
         style: {
-            background: 'oklch(13% 0.028 261.692)',
-            color_up: 'oklch(79.2% 0.209 151.711)',
-            color_down: 'oklch(63.7% 0.237 25.331)',
-            color_text: 'oklch(98.4% 0.003 247.858)',
-            color_alert: 'oklch(79.5% 0.184 86.047)',
+            background: '#030712',
+            color_up: '#06df72',
+            color_down: '#fb2c36',
+            color_text: '#f8fafc',
+            color_alert: '#f0b100',
             velocity: 60
         }
     };
@@ -31,6 +33,8 @@
 
         loadOverlayConfig().then(function (config) {
             currentConfig = config;
+
+            applyStyles(currentConfig);
 
             if (currentConfig && Array.isArray(currentConfig.tickers) && currentConfig.tickers.length > 0) {
                 syncTickers();
@@ -94,9 +98,51 @@
 
         if (cfg.type_style !== 'vertical') cfg.type_style = 'horizontal';
         cfg.sync_timer_seconds = Math.max(10, Number(cfg.sync_timer_seconds) || 60);
-        cfg.style.velocity = Math.max(20, Number(cfg.style.velocity) || 60);
+        if (cfg.background_style !== 'transparent') cfg.background_style = 'solid';
+        cfg.typografy_size = clampNumber(cfg.typografy_size, 10, 200, DEFAULTS.typografy_size);
+        cfg.style = normalizeStyle(cfg.style);
 
         return cfg;
+    }
+
+    // style verification (colors, background, typography size, velocity)
+    function normalizeStyle(style) {
+        var out = deepMerge(DEFAULTS.style, isConfigLike(style) ? style : {});
+
+        ['background', 'color_up', 'color_down', 'color_text', 'color_alert'].forEach(function (key) {
+            if (typeof out[key] !== 'string' || !out[key].trim()) {
+                out[key] = DEFAULTS.style[key];
+            } else {
+                out[key] = out[key].trim();
+            }
+        });
+
+        out.velocity = clampNumber(out.velocity, 20, 300, DEFAULTS.style.velocity);
+
+        return out;
+    }
+
+    function clampNumber(value, min, max, fallback) {
+        var n = Number(value);
+        if (!isFinite(n)) n = fallback;
+        return Math.min(max, Math.max(min, n));
+    }
+
+    // applies verified styles to the overlay
+    function applyStyles(config) {
+        if (!config || !config.style) return;
+
+        var style = config.style;
+        var root = document.documentElement;
+
+        root.style.setProperty('--green', style.color_up);
+        root.style.setProperty('--red', style.color_down);
+        root.style.setProperty('--white', style.color_text);
+        root.style.setProperty('--orange', style.color_alert);
+        root.style.setProperty('--black', config.background_style === 'transparent' ? 'transparent' : style.background);
+        root.style.setProperty('--marquee-duration', style.velocity + 's');
+
+        document.body.style.fontSize = config.typografy_size + 'px';
     }
 
     function deepMerge(base, override) {

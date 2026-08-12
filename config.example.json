@@ -3,6 +3,8 @@
   "provider": "finnhub",
   "sync_timer_seconds": 60,
   "type_style": "horizontal",
+  "background_style": "solid",
+  "typografy_size": 20,
   "tickers": [
     "AAPL",
     "NVDA",
