@@ -1,14 +1,14 @@
 @font-face {
     font-family: 'Geist';
-    src: url('/font/GeistPixel-Grid.ttf') format('truetype');
+    src: url('./font/GeistPixel-Grid.ttf') format('truetype');
 }
 
 :root {
-    --green: oklch(79.2% 0.209 151.711);
-    --red: oklch(63.7% 0.237 25.331);
-    --black: oklch(13% 0.028 261.692);
-    --white: oklch(98.4% 0.003 247.858);
-    --orange: oklch(79.5% 0.184 86.047);
+    --green: #06df72;
+    --red: #fb2c36;
+    --black: #030712;
+    --white: #f8fafc;
+    --orange: #f0b100;
 }
 
 body, html {
