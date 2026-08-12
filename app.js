@@ -33,7 +33,12 @@
         loadOverlayConfig().then(function (config) {
             currentConfig = config;
 
-            
+            var searchData = null;
+            if (currentConfig && Array.isArray(currentConfig.tickers) && currentConfig.tickers.length > 0) {
+                searchTicker(currentConfig.tickers[0]).then(function (data) {
+                    searchData = data;
+                });
+            }
         });
     }
 
