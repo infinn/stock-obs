@@ -178,7 +178,7 @@
     function ticketHTML(tickerData) {
         if (tickerData.error) {
             return '<div class="ticket"><span class="sym">' + tickerData.symbol + '</span>' +
-                '<span class="no-data">SIN DATOS</span></div>';
+                '<span class="no-data">NOT DATA</span></div>';
         }
         return '<div class="ticket ' + trendClass(tickerData.change) + '" id="ticket">' +
             '<span class="sym"> ' + tickerData.symbol + '</span>' +
@@ -229,7 +229,7 @@
                     if (d && d.status === 'error') throw new Error((d.message || 'TwelveData') + ' (' + ticker + ')');
                     var close = Number(d && d.close);
                     var prev = Number(d && d.previous_close);
-                    if (!isFinite(close) || !isFinite(prev)) throw new Error('TwelveData: sin datos para ' + ticker);
+                    if (!isFinite(close) || !isFinite(prev)) throw new Error('TwelveData: no data for ' + ticker);
                     return {
                         symbol: ticker,
                         price: close,
@@ -246,7 +246,7 @@
                 return res.json();
             })
             .then(function (d) {
-                if (d.c === undefined || d.c === null) throw new Error('Finnhub: sin datos para ' + ticker);
+                if (d.c === undefined || d.c === null) throw new Error('Finnhub: no data for ' + ticker);
                 return {
                     symbol: ticker,
                     price: d.c,
