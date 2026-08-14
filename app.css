@@ -54,6 +54,15 @@ main{
     animation: marquee var(--marquee-duration, 60s) linear infinite;
 }
 
+.marquee-track.no-animation {
+    animation: none;
+}
+
+.ticket.no-api-key {
+    color: var(--orange);
+    font-weight: bold;
+}
+
 .marquee-group {
     display: flex;
     flex-wrap: nowrap;

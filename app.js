@@ -36,7 +36,12 @@
 
             applyStyles(currentConfig);
 
-            if (currentConfig && Array.isArray(currentConfig.tickers) && currentConfig.tickers.length > 0) {
+            if (!currentConfig || !currentConfig.api_key || !currentConfig.api_key.trim()) {
+                showNoApiKey(track);
+                return;
+            }
+
+            if (Array.isArray(currentConfig.tickers) && currentConfig.tickers.length > 0) {
                 syncTickers();
                 setInterval(syncTickers, currentConfig.sync_timer_seconds * 1000);
             }
@@ -143,6 +148,12 @@
         root.style.setProperty('--marquee-duration', style.velocity + 's');
 
         document.body.style.fontSize = config.typografy_size + 'px';
+    }
+
+    // shows "NO API KEY" and stops the marquee animation
+    function showNoApiKey(track) {
+        track.classList.add('no-animation');
+        track.innerHTML = '<div class="marquee-group"><div class="ticket no-api-key">NO API KEY, ADD IN CONFIG.JSON</div></div>';
     }
 
     function deepMerge(base, override) {
